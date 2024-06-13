@@ -1,4 +1,5 @@
 const db = require('../../../../config/databases');
+
 module.exports = {
     development: {
         ...db.ystoq
@@ -8,5 +9,5 @@ module.exports = {
     },
     production: {
         ...db.ystoq
-    },
+    }
 }

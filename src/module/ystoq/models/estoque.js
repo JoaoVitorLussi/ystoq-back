@@ -16,11 +16,10 @@ module.exports = (sequelize, DataTypes) => {
   Estoque.init({
     descricao: DataTypes.STRING,
     endereco: DataTypes.STRING,
-    quantidade: DataTypes.INTEGER,
+    quantidade: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Estoque',
-    tableName: 'estoque',
   });
   return Estoque;
 };

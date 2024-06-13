@@ -15,11 +15,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Admin.init({
     nome: DataTypes.STRING,
-    senha: DataTypes.STRING,
+    senha: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Admin',
-    tableName: 'admin',
   });
   return Admin;
 };
