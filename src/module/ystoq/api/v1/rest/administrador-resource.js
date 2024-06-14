@@ -20,8 +20,8 @@ router.post('/admin',
           let token = await bcrypt.hash(senha, 10);
 
           let data = null;
-          const Post = await model.Admin.schema('public');
-          data = await Post.create({nome, senha: token});
+          const admin = await model.Admin.schema('public');
+          data = await admin.create({nome, senha: token});
           resp.json({detail: "Administrador criado com sucesso"}).status(201);
        }catch (error) {
           console.error("Erro ao criar administrador:", error);
@@ -32,8 +32,8 @@ router.post('/admin',
 router.get('/admin', async function (req, res) {
   try {
       let data = null;
-      const Post = await model.Admin.schema('public');
-      data = await Post.findAll();
+      const admin = await model.Admin.schema('public');
+      data = await admin.findAll();
       res.json(data).status(200);
   } catch (error) {
       console.error("Erro ao buscar administradores:", error);
@@ -46,8 +46,8 @@ router.get('/admin/:id',
     async function (req, resp){
         try{
             let data = null;
-            const Post = await model.Admin.schema('public');
-            data = await Post.findByPk(req.params.id);
+            const admin = await model.Admin.schema('public');
+            data = await admin.findByPk(req.params.id);
             if(data == null){
                 resp.status(404).json({error: "Administrador não encontrado."});
             }
@@ -62,8 +62,8 @@ router.put('/admin/:id',
     async function (req, resp){
         try{
             let data = null;
-            const Post = await model.Admin.schema('public');
-            data = await Post.update(req.body, {where: {id: req.params.id}});
+            const admin = await model.Admin.schema('public');
+            data = await admin.update(req.body, {where: {id: req.params.id}});
             resp.json({detail: "Administrador editado com sucesso"}).status(200);
         } catch (error) {
             console.error("Erro ao atualizar administrador:", error);
@@ -75,8 +75,8 @@ router.delete('/admin/:id',
     async function (req, resp){
         try{
             let data = null;
-            const Post = await model.Admin.schema('public');
-            data = await Post.destroy({where: {id: req.params.id}});
+            const admin = await model.Admin.schema('public');
+            data = await admin.destroy({where: {id: req.params.id}});
             if(data == 0){
               resp.status(404).json({error: "Administrador não encontrado."});
             }else{
