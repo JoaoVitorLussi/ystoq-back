@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const table = {tableName: 'admin', schema: "public"};
+    const table = {tableName: 'empresa', schema: "public"};
     await queryInterface.createTable(table, {
       id: {
         allowNull: false,
@@ -11,10 +11,12 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       nome: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
       },
-      senha: {
-        type: Sequelize.STRING
+      cnpj: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,
@@ -27,7 +29,7 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    const table = {tableName: 'admin', schema: "public"};
+    const table = {tableName: 'empresa', schema: "public"};
     await queryInterface.dropTable(table);
   }
 };
