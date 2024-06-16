@@ -42,4 +42,50 @@ router.get('/produto', async function (req, res) {
     }
   });
 
+router.get('/produto/:id',
+    async function (req, resp){
+        try{
+            let data = null;
+            const produto = await model.Produto.schema('public');
+            data = await produto.findByPk(req.params.id);
+            if(data == null){
+                resp.status(404).json({error: "Produto não encontrado."});
+            }
+            resp.json(data).status(200);
+        } catch (error) {
+            console.error("Erro ao buscar produto:", error);
+            resp.status(500).json({ error: "Erro ao buscar produto." });
+        }
+});
+
+router.put('/produto/:id',
+    async function (req, resp){
+        try{
+            let data = null;
+            const produto = await model.Produto.schema('public');
+            data = await produto.update(req.body, {where: {id: req.params.id}});
+            resp.json({detail: "Produto editado com sucesso"}).status(200);
+        } catch (error) {
+            console.error("Erro ao atualizar produto:", error);
+            resp.status(500).json({ error: "Erro ao atualizar produto." });
+        }
+});
+
+router.delete('/produto/:id',
+    async function (req, resp){
+        try{
+            let data = null;
+            const produto = await model.Produto.schema('public');
+            data = await produto.destroy({where: {id: req.params.id}});
+            if(data == 0){
+              resp.status(404).json({error: "Produto não encontrado."});
+            }else{
+              resp.status(200).json({detail: "Produto deletado"});
+            }
+        } catch (error) {
+            console.error("Erro ao deletar produto:", error);
+            resp.status(500).json({ error: "Erro ao deletar produto." });
+        }
+});
+
   module.exports = router;
