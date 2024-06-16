@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const model = require("../../../models");
+const authMiddleware = require("../../../../../../middlewares/authMiddleware");
 
 router.post("/estoque", async function (req, resp) {
   const { descricao, quantidade, endereco } = req.body;
@@ -27,7 +28,7 @@ router.post("/estoque", async function (req, resp) {
   }
 });
 
-router.get("/estoque", async function (req, resp) {
+router.get("/estoque", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");

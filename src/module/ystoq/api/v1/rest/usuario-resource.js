@@ -3,41 +3,56 @@ const router = express.Router();
 const model = require('../../../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
 
-router.post('/admin',
+router.post('/usuario',
     async function (req, resp){
-      const {nome, senha} = req.body;
+      const {nome, email, telefone, senha, nome_empresa, cnpj} = req.body;
        try{
-          let adminExists = await model.Admin.findOne({
+          let usuarioExists = await model.Usuario.findOne({
             where: {
-              nome
+              email
             }
           });
       
-          if (adminExists) {
-            return resp.status(200).json({ error: "Já existe um administrador com esse nome de usuário."});
+          if (usuarioExists) {
+            return resp.status(400).json({ error: "Já existe um usuário com esse email."});
           }
+
+          let empresaExists = await model.Empresa.findOne({
+            where: {
+              cnpj: cnpj
+            }
+          });
+      
+          if (empresaExists) {
+            return resp.status(400).json({ error: "Já existe um empresa com esse cnpj."});
+          }
+
+          const empresa = await model.Empresa.schema('public');
+          let data_empresa = await empresa.create({nome: nome_empresa, cnpj: cnpj});
+          
           let token = await bcrypt.hash(senha, 10);
 
           let data = null;
-          const admin = await model.Admin.schema('public');
-          data = await admin.create({nome, senha: token});
-          resp.json({detail: "Administrador criado com sucesso"}).status(201);
+          const usuario = await model.Usuario.schema('public');
+          data = await usuario.create({nome, email, telefone, senha: token, id_empresa: data_empresa.id});
+          resp.json({detail: "Usuário criado com sucesso"}).status(201);
        }catch (error) {
           console.error("Erro ao criar administrador:", error);
-          resp.status(500).json({ error: "Erro ao criar administrador." });
+          resp.status(500).json({ error: "Erro ao criar usuário." });
        }
 });
 
-router.get('/admin', async function (req, res) {
+router.get('/usuario', authMiddleware, async function (req, res) {
   try {
       let data = null;
-      const admin = await model.Admin.schema('public');
-      data = await admin.findAll();
+      const usuario = await model.Usuario.schema('public');
+      data = await usuario.findAll();
       res.json(data).status(200);
   } catch (error) {
-      console.error("Erro ao buscar administradores:", error);
-      res.status(500).json({ error: "Erro ao buscar administradores." });
+      console.error("Erro ao buscar usuário:", error);
+      res.status(500).json({ error: "Erro ao buscar usuários." });
   }
 });
 
@@ -46,7 +61,7 @@ router.get('/admin/:id',
     async function (req, resp){
         try{
             let data = null;
-            const admin = await model.Admin.schema('public');
+            const admin = await model.Usuario.schema('public');
             data = await admin.findByPk(req.params.id);
             if(data == null){
                 resp.status(404).json({error: "Administrador não encontrado."});
@@ -58,7 +73,7 @@ router.get('/admin/:id',
         }
 });
 
-router.put('/admin/:id',
+router.put('/admin/:id', authMiddleware,
     async function (req, resp){
         try{
             let data = null;
@@ -71,61 +86,26 @@ router.put('/admin/:id',
         }
 });
 
-router.delete('/admin/:id',
+router.delete('/usuario/:id', authMiddleware,
     async function (req, resp){
         try{
+            const {id} = req.params;
+            if(id == 1){
+              resp.status(400).json({error: "Não é possível deletar o administrador principal."});
+              return;
+            }
             let data = null;
-            const admin = await model.Admin.schema('public');
-            data = await admin.destroy({where: {id: req.params.id}});
+            const usuario = await model.Usuario.schema('public');
+            data = await usuario.destroy({where: {id: id}});
             if(data == 0){
-              resp.status(404).json({error: "Administrador não encontrado."});
+              resp.status(406).json({error: "Usuário não encontrado."});
             }else{
-              resp.status(200).json({detail: "Adimistrador deletado"});
+              resp.status(200).json({detail: "Usuário deletado"});
             }
         } catch (error) {
-            console.error("Erro ao deletar administrador:", error);
-            resp.status(500).json({ error: "Erro ao deletar administrador." });
+            console.error("Erro ao deletar usuário:", error);
+            resp.status(500).json({ error: "Erro ao deletar usuário." });
         }
-});
-
-router.post('/login-admin',
-    async function (req, resp){
-       try{
-          const {nome, senha} = req.body;
-          let admin = await model.Admin.findOne({
-            where: {
-              nome
-            }
-          });
-
-          if (!admin || !(await bcrypt.compare(senha, admin.senha))) {
-            return resp.status(200).send({
-              type: 'error',
-              message: 'Usuário ou senha incorretos!'
-            });
-          }
-
-          let token = jwt.sign(
-            { adminId: admin.id, nome: admin.nome }, //payload - dados utilizados na criacao do token
-            'AAAAAAAA', //chave PRIVADA da aplicação 
-            { expiresIn: '1h' } //options ... em quanto tempo ele expira...
-          );
-      
-          admin.token = token;
-          await admin.save();
-      
-          return resp.status(200).send({
-            type: 'sucess',
-            message: 'Bem-vindo! Login realizado com sucesso!',
-            data: admin,
-            token
-          });
-
-
-       }catch (error) {
-          console.error("Erro ao criar administrador:", error);
-          resp.status(500).json({ error: "Erro ao criar administrador." });
-       }
 });
 
 

@@ -4,44 +4,42 @@ const model = require('../../../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
   
-router.post('/login', async function (req, res) {
-    try {
-      let { nome, senha } = req.body;
-  
-      let user = await model.Admin.findOne({
-        where: {
-          nome
-        }
-      });
-  
-      if (!user || !(await bcrypt.compare(nome, user.passwordHash))) {
-        return res.status(200).send({
-          type: 'error',
-          message: 'Usuário ou senha incorretos!'
-        });
-      }
-  
-      let token = jwt.sign(
-        { userId: user.id, username: user.username, role: user.role }, //payload - dados utilizados na criacao do token
-        process.env.TOKEN_KEY, //chave PRIVADA da aplicação 
-        { expiresIn: '1h' } //options ... em quanto tempo ele expira...
-      );
-  
-      user.token = token;
-      await user.save();
-  
-      return res.status(200).send({
-        type: 'sucess',
-        message: 'Bem-vindo! Login realizado com sucesso!',
-        data: user,
-        token
-      });
-    } catch (error) {
-      return res.status(200).send({
-        type: 'error',
-        message: 'Ops! Ocorreu um erro!',
-        data: error
-      });
+router.post('/login', async function (req, resp) {
+    try{
+      const {email, senha} = req.body;
+       let usuario = await model.Usuario.findOne({
+         where: {
+           email
+         }
+       });
+
+       if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
+         return resp.status(200).send({
+           type: 'error',
+           message: 'Usuário ou senha incorretos!'
+         });
+       }
+
+       let token = jwt.sign(
+         { usuarioId: usuario.id, nome: usuario.nome },
+         process.env.TOKEN_KEY, 
+         { expiresIn: '1h' }
+       );
+   
+       usuario.token = token;
+       await usuario.save();
+   
+       return resp.status(200).send({
+         type: 'sucess',
+         message: 'Bem-vindo! Login realizado com sucesso!',
+         token,
+         email: usuario.email
+       });
+
+
+    }catch (error) {
+       console.error("Erro ao criar administrador:", error);
+       resp.status(500).json({ error: "Erro ao criar administrador." });
     }
 });
 
