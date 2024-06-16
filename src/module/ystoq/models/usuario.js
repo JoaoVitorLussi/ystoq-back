@@ -37,6 +37,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
+    deletedAt: {
+      type: DataTypes.DATE
+    },
     id_empresa: {
       type: DataTypes.INTEGER,
       allowNull: false,

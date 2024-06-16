@@ -46,10 +46,17 @@ router.post('/usuario',
 
 router.get('/usuario', authMiddleware, async function (req, res) {
   try {
+      let user = await getIdByEmail(req.email)
       let data = null;
-      const usuario = await model.Usuario.schema('public');
-      data = await usuario.findAll();
-      res.json(data).status(200);
+      if(user.id === 1){
+        const usuario = await model.Usuario.schema('public');
+        data = await usuario.findAll();
+        res.json(data).status(200);
+      }else{
+        const usuario = await model.Usuario.schema('public');
+        data = await usuario.findAll({where: {id_empresa: user.id_empresa}});
+        res.json(data).status(200);
+      }
   } catch (error) {
       console.error("Erro ao buscar usuário:", error);
       res.status(500).json({ error: "Erro ao buscar usuários." });
@@ -57,7 +64,7 @@ router.get('/usuario', authMiddleware, async function (req, res) {
 });
 
 
-router.get('/admin/:id',
+router.get('/usuario/:id', authMiddleware,
     async function (req, resp){
         try{
             let data = null;
@@ -73,16 +80,22 @@ router.get('/admin/:id',
         }
 });
 
-router.put('/admin/:id', authMiddleware,
+router.put('/usuario/:id', authMiddleware,
     async function (req, resp){
         try{
+            
+            if(req.params.id == 1){
+              resp.status(400).json({error: "Não é possível editar o administrador principal."});
+              return;
+            }
+
             let data = null;
-            const admin = await model.Admin.schema('public');
-            data = await admin.update(req.body, {where: {id: req.params.id}});
-            resp.json({detail: "Administrador editado com sucesso"}).status(200);
+            const usuario = await model.Usuario.schema('public');
+            data = await usuario.update(req.body, {where: {id: req.params.id}});
+            resp.json({detail: "Usuário editado com sucesso"}).status(200);
         } catch (error) {
-            console.error("Erro ao atualizar administrador:", error);
-            resp.status(500).json({ error: "Erro ao atualizar administrador." });
+            console.error("Erro ao atualizar usuário:", error);
+            resp.status(500).json({ error: "Erro ao atualizar usuário." });
         }
 });
 
@@ -94,19 +107,80 @@ router.delete('/usuario/:id', authMiddleware,
               resp.status(400).json({error: "Não é possível deletar o administrador principal."});
               return;
             }
-            let data = null;
-            const usuario = await model.Usuario.schema('public');
-            data = await usuario.destroy({where: {id: id}});
-            if(data == 0){
-              resp.status(406).json({error: "Usuário não encontrado."});
-            }else{
-              resp.status(200).json({detail: "Usuário deletado"});
+
+            let user = await getIdByEmail(req.email)
+
+            if(user.id == id){
+              resp.status(400).json({error: "Não é possível deletar o usuário logado."});
+              return;
             }
+
+            let data = null;
+            const now = new Date();
+            const usuario = await model.Usuario.schema('public');
+
+            if(usuario.flag_admin == true){
+              resp.status(400).json({error: "Não é possível deletar usuários administradores."});
+              return;
+            }
+
+            const userToDelete = await usuario.findOne({ where: { id: id } });
+
+            if (!userToDelete) {
+              return resp.status(406).json({ error: "Usuário não encontrado." });
+            } 
+
+            data = await usuario.update({deletedAt: now},{where: {id: id}});
+            
+            resp.status(200).json({detail: "Usuário deletado"}); 
         } catch (error) {
             console.error("Erro ao deletar usuário:", error);
             resp.status(500).json({ error: "Erro ao deletar usuário." });
         }
 });
 
+router.post('/cadastro-usuario', authMiddleware,
+    async function (req, resp){
+        try{
+            let user = await getIdByEmail(req.email)
+            let data = null;
+            
+            const usuario = await model.Usuario.schema('public');
+
+            let usuarioExists = await model.Usuario.findOne({
+              where: {
+                email: req.body.email
+              }
+            });
+        
+            if (usuarioExists) {
+              return resp.status(400).json({ error: "Já existe um usuário com esse email."});
+            }
+
+            let token = await bcrypt.hash(req.body.senha, 10);
+
+            data = await usuario.create({
+              nome: req.body.nome,
+              email: req.body.email,
+              telefone: req.body.telefone,
+              senha: token,
+              id_empresa: user.id_empresa
+            });
+            resp.json({detail: "Usuário criado com sucesso"}).status(201);
+        } catch (error) {
+            console.error("Erro ao criar usuário:", error);
+            resp.status(500).json({ error: "Erro ao criar usuário." });
+        }
+});
+
+async function getIdByEmail(email){
+  let data = null;
+  const usuario = await model.Usuario.schema('public');
+  data = await usuario.findOne({
+    where: { email: email },
+    attributes: ['id', 'id_empresa', 'flag_admin']
+  });
+  return data;
+}
 
 module.exports = router;
