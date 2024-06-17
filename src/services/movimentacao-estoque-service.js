@@ -61,7 +61,7 @@ async function validateEstoqueProduto(estoqueProdutoDisponivel, tipo, quantidade
 
     novaQuantidade = estoqueProdutoDisponivel.quantidade - quantidade;
     if (novaQuantidade < 0) {
-      throw new EstoqueProdutoError("A quantidade informada é menor que a disponível.");
+      throw new EstoqueProdutoError("A quantidade informada é maior que a disponível.");
     }
   }
   else {

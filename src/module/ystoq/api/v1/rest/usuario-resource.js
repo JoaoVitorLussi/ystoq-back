@@ -47,6 +47,7 @@ router.post("/usuario", async function (req, resp) {
       telefone,
       senha: token,
       id_empresa: data_empresa.id,
+      flag_admin: true,
     });
     resp.json({ detail: "Usuário criado com sucesso" }).status(201);
   } catch (error) {
