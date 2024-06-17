@@ -65,7 +65,6 @@ router.get("/movimentacao-estoque", async function (req, resp) {
 });
 
 router.get("/movimentacao-estoque/:id", async function (req, resp) {
-  console.log(req.params.id);
   try {
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");

@@ -8,12 +8,8 @@ const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
 
 router.post('/categoria-produto', authMiddleware,
     async function (req, resp){
-      console.log(req);
       const {descricao} = req.body;
-      console.log(req.email);
       let user = await usuarioService.getIdByEmail(req.email);
-      console.log(req.email);
-      console.log(req.body);
        try{
           let categoriaExists = await model.CategoriaProduto.findOne({
             where: {

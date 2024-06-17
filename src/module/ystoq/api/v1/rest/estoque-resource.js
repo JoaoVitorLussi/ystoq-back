@@ -116,7 +116,6 @@ router.delete("/estoque/:id", async function (req, resp) {
 });
 
 router.get("/detalhes-estoque/:id", async function (req, resp) {
-  console.log(req.params.id);
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
@@ -130,21 +129,5 @@ router.get("/detalhes-estoque/:id", async function (req, resp) {
     resp.status(500).json({ error: "Erro ao buscar estoque." });
   }
 });
-
-// router.get("/produtos-estoque/:id", async function (req, resp) {
-//     console.log(req.params.id);
-//     try {
-//       let data = null;
-//       const estoque = await model.Estoque.schema("public");
-//       data = await estoque.findByPk(req.params.id);
-//       if (data == null) {
-//         resp.status(404).json({ error: "Nenhum produto encontrado no estoque." });
-//       }
-//       resp.json(data).status(200);
-//     } catch (error) {
-//       console.error("Erro ao buscar produtos do estoque:", error);
-//       resp.status(500).json({ error: "Erro ao buscar produtos do estoque." });
-//     }
-//   });
 
 module.exports = router;
