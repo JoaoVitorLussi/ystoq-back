@@ -100,8 +100,9 @@ router.delete('/usuario/:id', authMiddleware,
             let data = null;
             const now = new Date();
             const usuario = await model.Usuario.schema('public');
+            let usuarioAdmin = await usuario.findOne({ where: { id: id } });
 
-            if(usuario.flag_admin == true){
+            if(usuarioAdmin.flag_admin == true){
               resp.status(400).json({error: "Não é possível deletar usuários administradores."});
               return;
             }
