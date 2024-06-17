@@ -44,22 +44,23 @@ router.post("/movimentacao-estoque", async function (req, resp) {
     dados = await movimentacao.create({ id_estoque, id_produto, quantidade, tipo, data, descricao });
     resp.json({ detail: "Movimetação adicionada com sucesso" }).status(201);
   } catch (error) {
-    console.error("Erro ao criar movimetação:", error);
     resp.status(500).json({ error: "Erro ao criar movimetação." });
   }
 });
 
-router.get("/movimentacao-estoque", async function (req, resp) {
+router.get("/movimentacoes-estoque/:id_estoque", async function (req, resp) {
   try {
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
-    data = await movimentacao.findAll();
+    data = await movimentacao.findAll({
+      where: { id_estoque: req.params.id_estoque },
+      include: [{ model: model.Produto, as: 'produto' }]
+    });
     if (data == null) {
       resp.status(404).json({ error: "Nenhuma movimentação encontrada." });
     }
     resp.json(data).status(200);
   } catch (error) {
-    console.error("Erro ao buscar estoque:", error);
     resp.status(500).json({ error: "Erro ao buscar estoque." });
   }
 });
@@ -68,13 +69,18 @@ router.get("/movimentacao-estoque/:id", async function (req, resp) {
   try {
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
-    data = await movimentacao.findByPk(req.params.id);
+    data = await movimentacao.findOne({
+      where: { id: req.params.id },
+      include: [
+        { model: model.Estoque, as: 'estoque' },
+        { model: model.Produto, as: 'produto' }
+      ]
+    });
     if (data == null) {
       resp.status(404).json({ error: "Nenhuma movimentação encontrada." });
     }
     resp.json(data).status(200);
   } catch (error) {
-    console.error("Erro ao buscar movimentação:", error);
     resp.status(500).json({ error: "Erro ao buscar movimentação." });
   }
 });
@@ -86,7 +92,6 @@ router.put("/movimentacao-estoque/:id", async function (req, resp) {
     data = await movimentacao.update(req.body, { where: { id: req.params.id } });
     resp.json({ detail: "Movimentação editada com sucesso" }).status(200);
   } catch (error) {
-    console.error("Erro ao atualizar movimentação:", error);
     resp.status(500).json({ error: "Erro ao atualizar movimentação." });
   }
 });
@@ -116,7 +121,6 @@ router.delete("/movimentacao-estoque/:id", async function (req, resp) {
       resp.status(200).json({ detail: "Movimentação deletada com sucesso." });
     }
   } catch (error) {
-    console.error("Erro ao deletar movimentação:", error);
     resp.status(500).json({ error: "Erro ao deletar movimentação." });
   }
 });

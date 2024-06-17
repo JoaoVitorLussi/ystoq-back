@@ -37,7 +37,6 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
     let { search = "" } = req.query;
     let data = null;
     let user = await usuarioSevice.getIdByEmail(req.email)
-    console.log(user)
     const estoque = await model.Estoque.schema("public");
     if(user.id === 1){
       data = await estoque.findAll({
