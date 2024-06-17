@@ -51,11 +51,11 @@ router.get('/usuario', authMiddleware, async function (req, res) {
       let data = null;
       if(user.id === 1){
         const usuario = await model.Usuario.schema('public');
-        data = await usuario.findAll();
+        data = await usuario.findAll({where: {deletedAt: null}});
         res.json(data).status(200);
       }else{
         const usuario = await model.Usuario.schema('public');
-        data = await usuario.findAll({where: {id_empresa: user.id_empresa}});
+        data = await usuario.findAll({where: {id_empresa: user.id_empresa, deletedAt: null}});
         res.json(data).status(200);
       }
   } catch (error) {

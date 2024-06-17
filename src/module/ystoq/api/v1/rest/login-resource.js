@@ -14,7 +14,7 @@ router.post('/login', async function (req, resp) {
        });
 
        if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
-         return resp.status(200).send({
+         return resp.status(403).send({
            type: 'error',
            message: 'Usuário ou senha incorretos!'
          });
