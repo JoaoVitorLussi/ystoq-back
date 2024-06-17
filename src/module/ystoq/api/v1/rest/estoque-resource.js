@@ -36,13 +36,24 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
     let data = null;
     let user = await usuarioSevice.getIdByEmail(req.email)
     const estoque = await model.Estoque.schema("public");
-    data = await estoque.findAll({
-      where: {
-        descricao: {
-          [Op.like]: `%${search}%`,
+    if(user.id === 1){
+      data = await estoque.findAll({
+        where: {
+          descricao: {
+            [Op.like]: `%${search}%`,
+          },
         },
-      },
-    });
+      });
+    }else{
+      data = await estoque.findAll({
+        where: {
+          descricao: {
+            [Op.like]: `%${search}%`,
+          },
+          id_empresa: user.id_empresa
+        },
+      });
+    } 
     if (data == null) {
       resp.status(404).json({ error: "Nenhum estoque encontrado." });
     }
@@ -84,6 +95,14 @@ router.delete("/estoque/:id", async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
+    const movimentacao = await model.MovimentacaoEstoque.schema("public");
+    let estoqueMovimentacao = await movimentacao.findAll({where : {id_estoque: req.params.id}})
+
+    if(estoqueMovimentacao.length > 0){
+      resp.status(400).json({error: "Não é possível deletar o estoque, pois existem movimentações associadas a ele."});
+      return;
+    }
+    
     data = await estoque.destroy({ where: { id: req.params.id } });
     if (data == 0) {
       resp.status(404).json({ error: "Estoque não encontrado." });
