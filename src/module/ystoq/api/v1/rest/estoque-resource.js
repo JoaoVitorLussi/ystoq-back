@@ -19,12 +19,12 @@ router.post("/estoque", authMiddleware, async function (req, resp) {
         .status(200)
         .json({ error: "Já existe um estoque com esse nome de usuário." });
     }
-    
+
     let user = await usuarioSevice.getIdByEmail(req.email)
 
     let data = null;
     const estoque = await model.Estoque.schema("public");
-    data = await estoque.create({ descricao, quantidade, endereco, id_empresa: user.id_empresa});
+    data = await estoque.create({ descricao, quantidade, endereco, id_empresa: user.id_empresa });
     resp.json({ detail: "Estoque criado com sucesso" }).status(200);
   } catch (error) {
     console.error("Erro ao criar estoque:", error);
@@ -38,7 +38,7 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
     let data = null;
     let user = await usuarioSevice.getIdByEmail(req.email)
     const estoque = await model.Estoque.schema("public");
-    if(user.id === 1){
+    if (user.id === 1) {
       data = await estoque.findAll({
         where: {
           descricao: {
@@ -46,7 +46,7 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
           },
         },
       });
-    }else{
+    } else {
       data = await estoque.findAll({
         where: {
           descricao: {
@@ -55,7 +55,7 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
           id_empresa: user.id_empresa
         },
       });
-    } 
+    }
     if (data == null) {
       resp.status(404).json({ error: "Nenhum estoque encontrado." });
     }
@@ -66,7 +66,7 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
   }
 });
 
-router.get("/estoque/:id", async function (req, resp) {
+router.get("/estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
@@ -81,7 +81,7 @@ router.get("/estoque/:id", async function (req, resp) {
   }
 });
 
-router.put("/estoque/:id", async function (req, resp) {
+router.put("/estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
@@ -93,18 +93,18 @@ router.put("/estoque/:id", async function (req, resp) {
   }
 });
 
-router.delete("/estoque/:id", async function (req, resp) {
+router.delete("/estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
-    let estoqueMovimentacao = await movimentacao.findAll({where : {id_estoque: req.params.id}})
+    let estoqueMovimentacao = await movimentacao.findAll({ where: { id_estoque: req.params.id } })
 
-    if(estoqueMovimentacao.length > 0){
-      resp.status(400).json({error: "Não é possível deletar o estoque, pois existem movimentações associadas a ele."});
+    if (estoqueMovimentacao.length > 0) {
+      resp.status(400).json({ error: "Não é possível deletar o estoque, pois existem movimentações associadas a ele." });
       return;
     }
-    
+
     data = await estoque.destroy({ where: { id: req.params.id } });
     if (data == 0) {
       resp.status(404).json({ error: "Estoque não encontrado." });
@@ -117,7 +117,7 @@ router.delete("/estoque/:id", async function (req, resp) {
   }
 });
 
-router.get("/detalhes-estoque/:id", async function (req, resp) {
+router.get("/detalhes-estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");

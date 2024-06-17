@@ -1,60 +1,45 @@
 const express = require("express");
 const router = express.Router();
 const model = require("../../../models");
-const enumTipoMovimentacao = require('../../../enums/tipo-movimentacao.js');
+const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
+const movimentacaoEstoqueSevice = require('../../../../../services/movimentacao-estoque-service');
+const { Op } = require("sequelize");
 
-router.post("/movimentacao-estoque", async function (req, resp) {
+router.post("/movimentacao-estoque", authMiddleware, async function (req, resp) {
   const { id_estoque, id_produto, quantidade, tipo, data, descricao } = req.body;
   try {
-    const estoqueProduto = await model.EstoqueProduto.schema("public");
-    let estoqueProdutoDisponivel = await estoqueProduto.findOne({
-      where: {
-        id_estoque,
-        id_produto
-      },
-    });
 
-    let novaQuantidade = 0;
-
-    if (tipo == enumTipoMovimentacao.saida) {
-      if (estoqueProdutoDisponivel == null) {
-        return resp.status(400).json({ error: "Produto não disponível no estoque." });
-      }
-
-      novaQuantidade = estoqueProdutoDisponivel.quantidade - quantidade;
-      if (novaQuantidade < 0) {
-        return resp
-          .status(400)
-          .json({ error: "A quantidade informada é menor que a disponível" });
-      }
-    }
-    else {
-      novaQuantidade = estoqueProdutoDisponivel?.quantidade + quantidade;
-    }
-
-    if (estoqueProdutoDisponivel == null) {
-      await estoqueProduto.create({ id_estoque, id_produto, quantidade });
-    }
-    else {
-      await estoqueProduto.update({ quantidade: novaQuantidade }, { where: { id: estoqueProdutoDisponivel.id } });
-    }
+    await movimentacaoEstoqueSevice.updateEstoqueProduto(id_estoque, id_produto, tipo, quantidade);
 
     let dados = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
     dados = await movimentacao.create({ id_estoque, id_produto, quantidade, tipo, data, descricao });
     resp.json({ detail: "Movimetação adicionada com sucesso" }).status(201);
   } catch (error) {
-    resp.status(500).json({ error: "Erro ao criar movimetação." });
+    if (error instanceof movimentacaoEstoqueSevice.EstoqueProdutoError) {
+      resp.status(400).json({ error: error.message });
+    } else {
+      resp.status(500).json({ error: "Erro ao criar movimentação." });
+    }
   }
 });
 
-router.get("/movimentacoes-estoque/:id_estoque", async function (req, resp) {
+router.get("/movimentacoes-estoque/:id_estoque", authMiddleware, async function (req, resp) {
   try {
+    let { search = "" } = req.query;
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
     data = await movimentacao.findAll({
-      where: { id_estoque: req.params.id_estoque },
-      include: [{ model: model.Produto, as: 'produto' }]
+      where: {
+        id_estoque: req.params.id_estoque,
+      },
+      include: [{
+        model: model.Produto,
+        as: 'produto',
+        where: {
+          descricao: { [Op.like]: `%${search}%` }
+        }
+      }]
     });
     if (data == null) {
       resp.status(404).json({ error: "Nenhuma movimentação encontrada." });
@@ -65,7 +50,7 @@ router.get("/movimentacoes-estoque/:id_estoque", async function (req, resp) {
   }
 });
 
-router.get("/movimentacao-estoque/:id", async function (req, resp) {
+router.get("/movimentacao-estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
@@ -85,7 +70,7 @@ router.get("/movimentacao-estoque/:id", async function (req, resp) {
   }
 });
 
-router.put("/movimentacao-estoque/:id", async function (req, resp) {
+router.put("/movimentacao-estoque/:id", authMiddleware, async function (req, resp) {
   try {
     let data = null;
     const movimentacao = await model.MovimentacaoEstoque.schema("public");
@@ -96,23 +81,11 @@ router.put("/movimentacao-estoque/:id", async function (req, resp) {
   }
 });
 
-router.delete("/movimentacao-estoque/:id", async function (req, resp) {
+router.delete("/movimentacao-estoque/:id", authMiddleware, async function (req, resp) {
   try {
-    const movimentacao = await model.MovimentacaoEstoque.schema("public");
-    const estoqueProduto = await model.EstoqueProduto.schema("public");
 
-    const movimentacao_estoque = await movimentacao.findByPk(req.params.id);
-    let estoque_produto = await estoqueProduto.findOne({ where: { id_estoque: movimentacao_estoque.id_estoque, id_produto: movimentacao_estoque.id_produto } });
+    await movimentacaoEstoqueSevice.undoMovimentacaoEstoque(req.params.id);
 
-    let novaQuantidade = 0;
-    if (movimentacao_estoque.tipo == enumTipoMovimentacao.saida) {
-      novaQuantidade = estoque_produto.quantidade + movimentacao_estoque.quantidade;
-    }
-    else {
-      novaQuantidade = estoque_produto.quantidade - movimentacao_estoque.quantidade;
-    }
-
-    await estoqueProduto.update({ quantidade: novaQuantidade }, { where: { id: estoque_produto.id } });
     let data = null;
     data = await movimentacao.destroy({ where: { id: req.params.id } });
     if (data == 0) {
