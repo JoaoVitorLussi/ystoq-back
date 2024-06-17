@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const model = require("../../../models");
 const authMiddleware = require("../../../../../../middlewares/authMiddleware");
+const usuarioSevice = require("../../../../../services/usuario-service");
 
 router.post("/estoque", async function (req, resp) {
   const { descricao, quantidade, endereco } = req.body;
@@ -31,8 +32,13 @@ router.post("/estoque", async function (req, resp) {
 router.get("/estoque", authMiddleware, async function (req, resp) {
   try {
     let data = null;
+    let user = await usuarioSevice.getIdByEmail(req.email)
     const estoque = await model.Estoque.schema("public");
-    data = await estoque.findAll();
+    if(user.id === 1){
+      data = await estoque.findAll();
+    }else{
+      data = await estoque.findAll({where: {id_empresa: user.id_empresa}});
+    }
     if (data == null) {
       resp.status(404).json({ error: "Nenhum estoque encontrado." });
     }

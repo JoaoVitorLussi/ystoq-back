@@ -7,35 +7,40 @@ module.exports = {
     await queryInterface.bulkInsert(table, [{
       descricao: 'Estoque Reserva 1',
       endereco: 'Rua 1',
-      quantidade: 10,
+      quantidade: 1000,
+      id_empresa: 2,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       descricao: 'Estoque Reserva 2',
       endereco: 'Rua 2',
-      quantidade: 20,
+      quantidade: 200,
+      id_empresa: 2,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       descricao: 'Estoque Reserva 3',
       endereco: 'Rua 3',
-      quantidade: 30,
+      quantidade: 300,
+      id_empresa: 2,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       descricao: 'Estoque Secundário',
       endereco: 'Rua 4',
-      quantidade: 40,
+      quantidade: 400,
+      id_empresa: 1,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
     descricao: 'Estoque Principal',
     endereco: 'Rua 5',
-    quantidade: 50,
+    quantidade: 500,
+    id_empresa: 1,
     createdAt: new Date(),
     updatedAt: new Date()
     }], {});

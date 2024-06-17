@@ -19,6 +19,16 @@ module.exports = {
       quantidade: {
         type: Sequelize.INTEGER
       },
+      id_empresa: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: {
+            tableName: 'empresa',
+            schema: "public"
+          },
+          key: 'id'
+        }
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
