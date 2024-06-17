@@ -4,6 +4,7 @@ const model = require('../../../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
+const usuarioSevice = require('../../../../../services/usuario-service');
 
 router.post('/usuario',
     async function (req, resp){
@@ -46,7 +47,7 @@ router.post('/usuario',
 
 router.get('/usuario', authMiddleware, async function (req, res) {
   try {
-      let user = await getIdByEmail(req.email)
+      let user = await usuarioSevice.getIdByEmail(req.email)
       let data = null;
       if(user.id === 1){
         const usuario = await model.Usuario.schema('public');
@@ -80,25 +81,6 @@ router.get('/usuario/:id', authMiddleware,
         }
 });
 
-router.put('/usuario/:id', authMiddleware,
-    async function (req, resp){
-        try{
-            
-            if(req.params.id == 1){
-              resp.status(400).json({error: "Não é possível editar o administrador principal."});
-              return;
-            }
-
-            let data = null;
-            const usuario = await model.Usuario.schema('public');
-            data = await usuario.update(req.body, {where: {id: req.params.id}});
-            resp.json({detail: "Usuário editado com sucesso"}).status(200);
-        } catch (error) {
-            console.error("Erro ao atualizar usuário:", error);
-            resp.status(500).json({ error: "Erro ao atualizar usuário." });
-        }
-});
-
 router.delete('/usuario/:id', authMiddleware,
     async function (req, resp){
         try{
@@ -108,7 +90,7 @@ router.delete('/usuario/:id', authMiddleware,
               return;
             }
 
-            let user = await getIdByEmail(req.email)
+            let user = await usuarioSevice.getIdByEmail(req.email)
 
             if(user.id == id){
               resp.status(400).json({error: "Não é possível deletar o usuário logado."});
@@ -142,7 +124,7 @@ router.delete('/usuario/:id', authMiddleware,
 router.post('/cadastro-usuario', authMiddleware,
     async function (req, resp){
         try{
-            let user = await getIdByEmail(req.email)
+            let user = await usuarioSevice.getIdByEmail(req.email)
             let data = null;
             
             const usuario = await model.Usuario.schema('public');
@@ -173,14 +155,33 @@ router.post('/cadastro-usuario', authMiddleware,
         }
 });
 
-async function getIdByEmail(email){
-  let data = null;
-  const usuario = await model.Usuario.schema('public');
-  data = await usuario.findOne({
-    where: { email: email },
-    attributes: ['id', 'id_empresa', 'flag_admin']
-  });
-  return data;
-}
+
+router.put('/usuario/:id', authMiddleware,
+  async function (req, resp){
+      try{
+          
+          if(req.params.id == 1){
+            resp.status(400).json({error: "Não é possível editar o administrador principal."});
+            return;
+          }
+          const usuario = await model.Usuario.schema('public');
+          let data = null;
+  
+          if(req.body.senha){
+            let token = await bcrypt.hash(req.body.senha, 10);
+            data = await usuario.update({senha: token}, {where: {id: req.params.id}});
+          }
+
+          data = await usuario.update({
+            nome: req.body.nome,
+            email: req.body.email,
+            telefone: req.body.telefone
+          }, {where: {id: req.params.id}});
+          resp.json({detail: "Usuário editado com sucesso"}).status(200);
+      } catch (error) {
+          console.error("Erro ao atualizar usuário:", error);
+          resp.status(500).json({ error: "Erro ao atualizar usuário." });
+      }
+});
 
 module.exports = router;
