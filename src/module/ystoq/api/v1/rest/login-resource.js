@@ -33,13 +33,14 @@ router.post('/login', async function (req, resp) {
          type: 'sucess',
          message: 'Bem-vindo! Login realizado com sucesso!',
          token,
-         email: usuario.email
+         email: usuario.email,
+         admin_flag: usuario.flag_admin
        });
 
 
     }catch (error) {
-       console.error("Erro ao criar administrador:", error);
-       resp.status(500).json({ error: "Erro ao criar administrador." });
+       console.error("Erro ao logar:", error);
+       resp.status(500).json({ error: "Erro ao logar." });
     }
 });
 
