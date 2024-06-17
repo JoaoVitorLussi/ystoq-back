@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const usuarioService = require('../../../../../../src/services/usuario-service');
 const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
 
-router.post('/categoria', authMiddleware,
+router.post('/categoria-produto', authMiddleware,
     async function (req, resp){
       console.log(req);
       const {descricao} = req.body;
@@ -36,7 +36,7 @@ router.post('/categoria', authMiddleware,
        }
 });
 
-router.get('/categoria', async function (req, res) {
+router.get('/categoria-produto', async function (req, res) {
     try {
         let data = null;
         const categoria = await model.CategoriaProduto.schema('public');
@@ -48,7 +48,7 @@ router.get('/categoria', async function (req, res) {
     }
   });
 
-  router.get('/categoria/:id',
+  router.get('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;
@@ -64,7 +64,7 @@ router.get('/categoria', async function (req, res) {
         }
 });
 
-router.put('/categoria/:id',
+router.put('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;
@@ -77,7 +77,7 @@ router.put('/categoria/:id',
         }
 });
 
-router.delete('/categoria/:id',
+router.delete('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;

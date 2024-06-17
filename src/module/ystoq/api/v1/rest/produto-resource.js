@@ -44,7 +44,7 @@ router.get('/produto', async function (req, res) {
     try {
         let data = null;
         const produto = await model.Produto.schema('public');
-        data = await produto.findAll();
+        data = await produto.findAll({include:[{model:model.CategoriaProduto, as:'categoria_produto'}]});
         res.json(data).status(200);
     } catch (error) {
         console.error("Erro ao buscar produtos:", error);
