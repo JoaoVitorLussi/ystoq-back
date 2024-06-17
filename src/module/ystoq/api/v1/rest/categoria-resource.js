@@ -3,15 +3,22 @@ const router = express.Router();
 const model = require('../../../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const usuarioService = require('../../../../../../src/services/usuario-service');
+const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
 
-router.post('/categoria',
+router.post('/categoria-produto', authMiddleware,
     async function (req, resp){
-      const {descricao,id_empresa} = req.body;
+      console.log(req);
+      const {descricao} = req.body;
+      console.log(req.email);
+      let user = await usuarioService.getIdByEmail(req.email);
+      console.log(req.email);
       console.log(req.body);
        try{
           let categoriaExists = await model.CategoriaProduto.findOne({
             where: {
-              descricao,id_empresa
+              descricao: descricao,
+              id_empresa: user.id_empresa
             }
           });
       
@@ -21,7 +28,7 @@ router.post('/categoria',
 
           let data = null;
           const categoria = await model.CategoriaProduto.schema('public');
-          data = await categoria.create({descricao,id_empresa});
+          data = await categoria.create({descricao: descricao,id_empresa: user.id_empresa});
           resp.json({detail: "Categoria criada com sucesso"}).status(201);
        }catch (error) {
           console.error("Não foi possível criar a categoria", error);
@@ -29,7 +36,7 @@ router.post('/categoria',
        }
 });
 
-router.get('/categoria', async function (req, res) {
+router.get('/categoria-produto', async function (req, res) {
     try {
         let data = null;
         const categoria = await model.CategoriaProduto.schema('public');
@@ -41,7 +48,7 @@ router.get('/categoria', async function (req, res) {
     }
   });
 
-  router.get('/categoria/:id',
+  router.get('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;
@@ -57,7 +64,7 @@ router.get('/categoria', async function (req, res) {
         }
 });
 
-router.put('/categoria/:id',
+router.put('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;
@@ -70,7 +77,7 @@ router.put('/categoria/:id',
         }
 });
 
-router.delete('/categoria/:id',
+router.delete('/categoria-produto/:id',
     async function (req, resp){
         try{
             let data = null;

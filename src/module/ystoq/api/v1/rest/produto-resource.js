@@ -4,37 +4,47 @@ const model = require('../../../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const produto = require('../../../models/produto');
+const usuarioService = require('../../../../../../src/services/usuario-service');
+const authMiddleware = require('../../../../../..//middlewares/authMiddleware');
 
-router.post('/produto',
-    async function (req, resp){
-      const {descricao,id_categoria_produto,quantidade,id_empresa} = req.body;
-      console.log(req.body);
-       try{
-          let produtoExists = await model.Produto.findOne({
-            where: {
-              descricao,id_categoria_produto,quantidade,id_empresa
-            }
-          });
-      
-          if (produtoExists) {
-            return resp.status(200).json({ error: "Este produto já encontra-se cadastrado."});
+router.post('/produto', authMiddleware, async function (req, resp) {
+  const { descricao, id_categoria_produto, quantidade } = req.body;
+  try {
+      let user = await usuarioService.getIdByEmail(req.email);
+
+      let produtoExists = await model.Produto.findOne({
+          where: {
+              descricao: descricao,
+              id_categoria_produto: id_categoria_produto,
+              quantidade: quantidade,
+              id_empresa: user.id_empresa
           }
+      });
 
-          let data = null;
-          const produto = await model.Produto.schema('public');
-          data = await produto.create({descricao,id_categoria_produto,quantidade,id_empresa});
-          resp.json({detail: "Produto criado com sucesso"}).status(201);
-       }catch (error) {
-          console.error("Não foi possível criar o produto", error);
-          resp.status(500).json({ error: "Erro ao criar o produto." });
-       }
+      if (produtoExists) {
+          return resp.status(200).json({ error: "Este produto já encontra-se cadastrado." });
+      }
+
+      const produto = await model.Produto.schema('public');
+      const data = await produto.create({
+          descricao,
+          id_categoria_produto,
+          quantidade,
+          id_empresa: user.id_empresa
+      });
+
+      resp.status(201).json({ detail: "Produto criado com sucesso", produto: data });
+  } catch (error) {
+      console.error("Não foi possível criar o produto", error);
+      resp.status(500).json({ error: "Erro ao criar o produto." });
+  }
 });
 
 router.get('/produto', async function (req, res) {
     try {
         let data = null;
         const produto = await model.Produto.schema('public');
-        data = await produto.findAll();
+        data = await produto.findAll({include:[{model:model.CategoriaProduto, as:'categoria_produto'}]});
         res.json(data).status(200);
     } catch (error) {
         console.error("Erro ao buscar produtos:", error);
