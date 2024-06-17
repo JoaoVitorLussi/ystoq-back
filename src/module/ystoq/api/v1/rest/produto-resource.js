@@ -85,7 +85,12 @@ router.get('/produto/:id', authMiddleware,
         try {
             let data = null;
             const produto = await model.Produto.schema('public');
-            data = await produto.findByPk(req.params.id);
+            data = await produto.findOne({
+                where: { id: req.params.id },
+                include: [
+                  { model: model.CategoriaProduto, as: 'categoria_produto' }
+                ]
+              });
             if (data == null) {
                 resp.status(404).json({ error: "Produto não encontrado." });
             }
