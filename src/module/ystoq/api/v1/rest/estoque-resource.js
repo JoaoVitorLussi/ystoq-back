@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const model = require("../../../models");
 const authMiddleware = require("../../../../../../middlewares/authMiddleware");
+const { Op } = require("sequelize");
 const usuarioSevice = require("../../../../../services/usuario-service");
 
 router.post("/estoque", async function (req, resp) {
@@ -31,14 +32,17 @@ router.post("/estoque", async function (req, resp) {
 
 router.get("/estoque", authMiddleware, async function (req, resp) {
   try {
+    let { search = "" } = req.query;
     let data = null;
     let user = await usuarioSevice.getIdByEmail(req.email)
     const estoque = await model.Estoque.schema("public");
-    if(user.id === 1){
-      data = await estoque.findAll();
-    }else{
-      data = await estoque.findAll({where: {id_empresa: user.id_empresa}});
-    }
+    data = await estoque.findAll({
+      where: {
+        descricao: {
+          [Op.like]: `%${search}%`,
+        },
+      },
+    });
     if (data == null) {
       resp.status(404).json({ error: "Nenhum estoque encontrado." });
     }
@@ -50,7 +54,6 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
 });
 
 router.get("/estoque/:id", async function (req, resp) {
-  console.log(req.params.id);
   try {
     let data = null;
     const estoque = await model.Estoque.schema("public");
