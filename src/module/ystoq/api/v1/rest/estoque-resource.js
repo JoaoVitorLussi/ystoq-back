@@ -132,4 +132,28 @@ router.get("/detalhes-estoque/:id", authMiddleware, async function (req, resp) {
   }
 });
 
+
+router.get("/estoque-produto/:id", authMiddleware, async function (req, resp) {
+  try {
+    const estoqueId = req.params.id;
+    const estoque = await model.EstoqueProduto.schema("public");
+    let data = await estoque.findAll({
+      where: { id_estoque: estoqueId },
+      include: [
+        { model: model.Estoque, as: 'estoque' },
+        { model: model.Produto, as: 'produto' }
+      ]
+    });
+
+    if (!data) {
+      return resp.status(404).json({ error: "Nenhum estoque encontrado." });
+    }
+
+    resp.status(200).json(data);
+  } catch (error) {
+    console.error("Erro ao buscar estoque e produtos:", error);
+    resp.status(500).json({ error: "Erro ao buscar estoque e produtos." });
+  }
+});
+
 module.exports = router;
