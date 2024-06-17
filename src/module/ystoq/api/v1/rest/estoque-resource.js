@@ -5,7 +5,7 @@ const authMiddleware = require("../../../../../../middlewares/authMiddleware");
 const { Op } = require("sequelize");
 const usuarioSevice = require("../../../../../services/usuario-service");
 
-router.post("/estoque", async function (req, resp) {
+router.post("/estoque", authMiddleware, async function (req, resp) {
   const { descricao, quantidade, endereco } = req.body;
   try {
     let estoqueExists = await model.Estoque.findOne({
@@ -19,10 +19,12 @@ router.post("/estoque", async function (req, resp) {
         .status(200)
         .json({ error: "Já existe um estoque com esse nome de usuário." });
     }
+    
+    let user = await usuarioSevice.getIdByEmail(req.email)
 
     let data = null;
     const estoque = await model.Estoque.schema("public");
-    data = await estoque.create({ descricao, quantidade, endereco });
+    data = await estoque.create({ descricao, quantidade, endereco, id_empresa: user.id_empresa});
     resp.json({ detail: "Estoque criado com sucesso" }).status(200);
   } catch (error) {
     console.error("Erro ao criar estoque:", error);
@@ -35,6 +37,7 @@ router.get("/estoque", authMiddleware, async function (req, resp) {
     let { search = "" } = req.query;
     let data = null;
     let user = await usuarioSevice.getIdByEmail(req.email)
+    console.log(user)
     const estoque = await model.Estoque.schema("public");
     if(user.id === 1){
       data = await estoque.findAll({
